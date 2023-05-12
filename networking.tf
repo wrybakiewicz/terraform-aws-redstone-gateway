@@ -13,6 +13,24 @@ locals {
           protocol    = "tcp"
           cidr_blocks = ["0.0.0.0/0"]
         }
+        http = {
+          from        = 8080
+          to          = 8080
+          protocol    = "tcp"
+          cidr_blocks = ["0.0.0.0/0"]
+        }
+        app = {
+          from        = 3000
+          to          = 3000
+          protocol    = "tcp"
+          cidr_blocks = ["0.0.0.0/0"]
+        }
+        allTest = {
+          from = 0
+          to = 0
+          protocol = "-1"
+          cidr_blocks = ["0.0.0.0/0"]
+        }
       }
     }
     private = {
@@ -58,7 +76,7 @@ resource "aws_subnet" "redstone_gateway_public_subnet" {
   availability_zone       = data.aws_availability_zones.availability_zones.names[random_integer.random_az_index.id]
 
   tags = {
-    Name = "${local.name_prefix}_public"
+    Name = "${local.name_prefix}_public_sn"
   }
 }
 
@@ -69,7 +87,7 @@ resource "aws_subnet" "redstone_gateway_private_subnet" {
   availability_zone       = data.aws_availability_zones.availability_zones.names[random_integer.random_az_index.id]
 
   tags = {
-    Name = "${local.name_prefix}_private"
+    Name = "${local.name_prefix}_private_sn"
   }
 }
 
