@@ -22,3 +22,5 @@
 
 # .tfstate files
 *.tfstate
+*.tfstate.*
+*.tfplan
