@@ -7,6 +7,8 @@ data "aws_cloudfront_cache_policy" "aws_cloudfront_cache_policy" {
 }
 
 resource "aws_cloudfront_distribution" "redstone_gateway_cloudfront_distribution" {
+  comment = "Distribution for ALB targeted to ECS with Redstone Gateway"
+
   origin {
     domain_name              = aws_lb.redstone_gateway_loadbalancer.dns_name
     origin_id                = aws_lb.redstone_gateway_loadbalancer.dns_name
@@ -35,6 +37,7 @@ resource "aws_cloudfront_distribution" "redstone_gateway_cloudfront_distribution
       locations        = []
     }
   }
+
   viewer_certificate {
     cloudfront_default_certificate = true
   }

@@ -22,11 +22,15 @@ resource "mongodbatlas_advanced_cluster" "redstone_gateway_mongodbatlas_cluster"
   project_id   = mongodbatlas_project.redstone_gateway_mongodbatlas_project.id
   name         = "gateway-cluster"
   cluster_type = "REPLICASET"
+  mongo_db_major_version = "6.0"
   replication_specs {
     region_configs {
       electable_specs {
         instance_size = "M10"
         node_count    = 3
+      }
+      auto_scaling {
+        disk_gb_enabled = true
       }
       provider_name = local.provider_name
       priority      = 7

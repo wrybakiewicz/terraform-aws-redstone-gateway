@@ -1,6 +1,8 @@
 locals {
   ecr_image = "public.ecr.aws/y7v2w8b2/redstone-cache-service:f209220"
   ecs_container_name = "${local.name_prefix}_container"
+  ecs_task_cpu = 1024
+  ecs_task_memory = 2048
 }
 
 data "aws_region" "aws_current_region" {}
@@ -11,14 +13,7 @@ resource "aws_ecs_cluster" "redstone_gateway_ecs_cluster" {
 
 resource "aws_ecs_cluster_capacity_providers" "redstone_gateway_ecs_cluster_capacity_providers" {
   cluster_name = aws_ecs_cluster.redstone_gateway_ecs_cluster.name
-
   capacity_providers = ["FARGATE"]
-
-  default_capacity_provider_strategy {
-    base              = 1
-    weight            = 100
-    capacity_provider = "FARGATE"
-  }
 }
 
 resource "aws_ecs_service" "redstone_gateway_ecs_service" {
@@ -39,26 +34,26 @@ resource "aws_ecs_service" "redstone_gateway_ecs_service" {
     assign_public_ip = true
   }
 
-  lifecycle {
-    ignore_changes = [
-      capacity_provider_strategy
-    ]
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE"
+    base              = 1
+    weight            = 100
   }
 }
 
 resource "aws_ecs_task_definition" "redstone_gateway_ecs_task_definition" {
   family = "${local.name_prefix}_task"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = 1024
-  memory                   = 2048
+  cpu                      = local.ecs_task_cpu
+  memory                   = local.ecs_task_memory
   network_mode             = "awsvpc"
   execution_role_arn = aws_iam_role.redstone_gateway_ecs_task_execution_role.arn
   container_definitions = jsonencode([
     {
       name   = local.ecs_container_name
       image  = local.ecr_image
-      cpu    = 1024
-      memory = 2048
+      cpu    = local.ecs_task_cpu
+      memory = local.ecs_task_memory
       essential = true
       portMappings: [
         {

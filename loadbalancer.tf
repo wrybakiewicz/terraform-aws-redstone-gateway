@@ -5,6 +5,7 @@ resource "aws_lb" "redstone_gateway_loadbalancer" {
 }
 
 resource "aws_lb_target_group" "redstone_gateway_loadbalancer_target_group" {
+  name = "redstone-gateway-lb-tg"
   port        = local.app_port
   protocol    = "HTTP"
   target_type = "ip"
