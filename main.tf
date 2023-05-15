@@ -1,5 +1,4 @@
 locals {
-  mongodb_connection_string = "${replace(mongodbatlas_advanced_cluster.redstone_gateway_mongodbatlas_cluster.connection_strings[0].standard_srv, "mongodb+srv://", "mongodb+srv://${mongodbatlas_database_user.redstone_gateway_mongodbatlas_database_user.username}:${coalesce(nonsensitive(mongodbatlas_database_user.redstone_gateway_mongodbatlas_database_user.password), "null")}@")}/redstoneGatewayDb"
   ecr_image = "public.ecr.aws/y7v2w8b2/redstone-cache-service:f209220"
 }
 
@@ -78,8 +77,7 @@ resource "aws_ecs_task_definition" "redstone_gateway_ecs_task_definition" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-create-group: "true"
-          awslogs-group  = "${local.name_prefix}_log_group"
+          awslogs-group  = aws_cloudwatch_log_group.redstone_gateway_ecs_log_group.name
           awslogs-region = data.aws_region.aws_current_region.name
           awslogs-stream-prefix: "redstone"
         }

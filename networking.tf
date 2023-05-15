@@ -1,8 +1,7 @@
 locals {
   vpc_cidr = "10.2.0.0/16"
   public_subnet_cidrs     = [for i in range(2, 255, 2) : cidrsubnet(local.vpc_cidr, 8, i)]
-  public_subnet_count = 2
-  max_subnets = 2
+  public_subnet_count = 3
   security_groups = {
     public = {
       name        = "public_sg"
@@ -53,7 +52,7 @@ data "aws_availability_zones" "availability_zones" {}
 
 resource "random_shuffle" "az_list" {
   input        = data.aws_availability_zones.availability_zones.names
-  result_count = local.max_subnets
+  result_count = local.public_subnet_count
 }
 
 resource "aws_vpc" "redstone_gateway_vpc" {
