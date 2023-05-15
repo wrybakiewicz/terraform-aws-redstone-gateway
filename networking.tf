@@ -2,50 +2,6 @@ locals {
   vpc_cidr = "10.2.0.0/16"
   public_subnet_cidrs     = [for i in range(2, 255, 2) : cidrsubnet(local.vpc_cidr, 8, i)]
   public_subnet_count = 3
-  security_groups = {
-    public = {
-      name        = "public_sg"
-      description = "Security group for public access."
-      ingress = {
-        https = {
-          from        = 443
-          to          = 443
-          protocol    = "tcp"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-        http = {
-          from        = 8080
-          to          = 8080
-          protocol    = "tcp"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-        app = {
-          from        = 3000
-          to          = 3000
-          protocol    = "tcp"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-        allTest = {
-          from = 0
-          to = 0
-          protocol = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      }
-    }
-    private = {
-      name        = "private_sg"
-      description = "Security group for private access."
-      ingress = {
-        https = {
-          from        = 27017
-          to          = 27017
-          protocol    = "tcp"
-          cidr_blocks = [local.vpc_cidr]
-        }
-      }
-    }
-  }
 }
 
 data "aws_availability_zones" "availability_zones" {}
@@ -81,24 +37,38 @@ resource "aws_subnet" "redstone_gateway_public_subnets" {
   }
 }
 
-resource "aws_security_group" "redstone_gateway_security_groups" {
-  for_each    = local.security_groups
-  name        = each.value.name
-  description = each.value.description
-  vpc_id      = aws_vpc.redstone_gateway_vpc.id
-  dynamic "ingress" {
-    for_each = each.value.ingress
-    content {
-      from_port   = ingress.value.from
-      to_port     = ingress.value.to
-      protocol    = ingress.value.protocol
-      cidr_blocks = ingress.value.cidr_blocks
-    }
+resource "aws_security_group" "redstone_gateway_lb_security_group" {
+  name = "lb_sg"
+  description = "Security group for Load Balancer."
+  vpc_id = aws_vpc.redstone_gateway_vpc.id
+  ingress {
+    from_port = local.app_port
+    to_port = local.app_port
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
-    from_port   = 0
-    protocol    = "-1"
-    to_port     = 0
+    from_port = local.app_port
+    to_port = local.app_port
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "redstone_gateway_ecs_security_group" {
+  name = "ecs_sg"
+  description = "Security group for ECS."
+  vpc_id = aws_vpc.redstone_gateway_vpc.id
+  ingress {
+    from_port         = local.app_port
+    to_port           = local.app_port
+    protocol          = "tcp"
+    security_groups = [aws_security_group.redstone_gateway_lb_security_group.id]
+  }
+  egress {
+    from_port = 0
+    protocol = "-1"
+    to_port = 0
     cidr_blocks = ["0.0.0.0/0"]
   }
 }

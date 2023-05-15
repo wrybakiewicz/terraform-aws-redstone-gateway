@@ -29,13 +29,12 @@ resource "aws_ecs_service" "redstone_gateway_ecs_service" {
   load_balancer {
     target_group_arn = aws_lb_target_group.redstone_gateway_loadbalancer_target_group.arn
     container_name   = "${local.name_prefix}_container"
-    container_port   = 3000
+    container_port   = local.app_port
   }
 
   network_configuration {
     subnets = aws_subnet.redstone_gateway_public_subnets.*.id
-    //TODO: move to private sg
-    security_groups = [aws_security_group.redstone_gateway_security_groups["public"].id]
+    security_groups = [aws_security_group.redstone_gateway_ecs_security_group.id]
     assign_public_ip = true
   }
 
@@ -62,8 +61,8 @@ resource "aws_ecs_task_definition" "redstone_gateway_ecs_task_definition" {
       essential = true
       portMappings: [
         {
-          "containerPort": 3000,
-          "hostPort": 3000
+          "containerPort": local.app_port,
+          "hostPort": local.app_port
         }
       ]
       environment = [

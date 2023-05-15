@@ -1,11 +1,11 @@
 resource "aws_lb" "redstone_gateway_loadbalancer" {
   name            = "redstone-gateway-lb"
   subnets         = aws_subnet.redstone_gateway_public_subnets.*.id
-  security_groups = [aws_security_group.redstone_gateway_security_groups["public"].id]
+  security_groups = [aws_security_group.redstone_gateway_lb_security_group.id]
 }
 
 resource "aws_lb_target_group" "redstone_gateway_loadbalancer_target_group" {
-  port        = 3000
+  port        = local.app_port
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = aws_vpc.redstone_gateway_vpc.id
@@ -23,7 +23,7 @@ resource "aws_lb_target_group" "redstone_gateway_loadbalancer_target_group" {
 
 resource "aws_lb_listener" "redstone_gateway_loadbalancer_listener" {
   load_balancer_arn = aws_lb.redstone_gateway_loadbalancer.arn
-  port              = "3000"
+  port              = local.app_port
   protocol          = "HTTP"
 
   default_action {

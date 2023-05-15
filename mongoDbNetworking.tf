@@ -25,9 +25,7 @@ resource "aws_vpc_peering_connection_accepter" "redstone_gateway_mongodbatlas_ne
 
 resource "mongodbatlas_project_ip_access_list" "redstone_gateway_mongodbatlas_project_ip_access_list" {
   project_id         = mongodbatlas_project.redstone_gateway_mongodbatlas_project.id
-//  TODO: move to private sg
-  aws_security_group = aws_security_group.redstone_gateway_security_groups["public"].id
-
+  aws_security_group = aws_security_group.redstone_gateway_ecs_security_group.id
   depends_on = [mongodbatlas_network_peering.redstone_gateway_mongodbatlas_network_peering]
 }
 

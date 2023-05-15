@@ -12,7 +12,7 @@ resource "aws_cloudfront_distribution" "redstone_gateway_cloudfront_distribution
     origin_id                = aws_lb.redstone_gateway_loadbalancer.dns_name
 
     custom_origin_config {
-      http_port              = 3000
+      http_port              = local.app_port
       https_port             = 443
       origin_protocol_policy = "http-only"
       origin_ssl_protocols   = ["TLSv1.2"]
