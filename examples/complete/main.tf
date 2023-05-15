@@ -1,7 +1,3 @@
-locals {
-  aws_region = "eu-central-1"
-}
-
 module "gateway" {
   source = "../../"
   admin_routes_api_key = "example-key"
