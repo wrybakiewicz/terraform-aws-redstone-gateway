@@ -1,5 +1,5 @@
 module "gateway" {
-  source = "../../"
+  source               = "../../"
   admin_routes_api_key = "example-key"
-  mongodbatlas_region = "EU_CENTRAL_1"
+  mongodbatlas_region  = "EU_CENTRAL_1"
 }
