@@ -1,7 +1,10 @@
 locals {
   vpc_cidr = "10.2.0.0/16"
-  public_subnet_cidr = "10.2.1.0/24"
-  private_subnet_cidr = "10.2.2.0/24"
+  public_subnet_cidrs     = [for i in range(2, 255, 2) : cidrsubnet(local.vpc_cidr, 8, i)]
+  private_subnet_cidrs    = [for i in range(1, 255, 2) : cidrsubnet(local.vpc_cidr, 8, i)]
+  public_subnet_count = 2
+  private_subnet_count = 2
+  max_subnets = 2
   security_groups = {
     public = {
       name        = "public_sg"
@@ -50,9 +53,9 @@ locals {
 
 data "aws_availability_zones" "availability_zones" {}
 
-resource "random_integer" "random_az_index" {
-  min = 0
-  max = length(data.aws_availability_zones.availability_zones.names) - 1
+resource "random_shuffle" "az_list" {
+  input        = data.aws_availability_zones.availability_zones.names
+  result_count = local.max_subnets
 }
 
 resource "aws_vpc" "redstone_gateway_vpc" {
@@ -69,26 +72,36 @@ resource "aws_vpc" "redstone_gateway_vpc" {
   }
 }
 
-resource "aws_subnet" "redstone_gateway_public_subnet" {
-  cidr_block              = local.public_subnet_cidr
+resource "aws_subnet" "redstone_gateway_public_subnets" {
+  count = local.public_subnet_count
+  cidr_block              = local.public_subnet_cidrs[count.index]
   vpc_id                  = aws_vpc.redstone_gateway_vpc.id
   map_public_ip_on_launch = true
-  availability_zone       = data.aws_availability_zones.availability_zones.names[random_integer.random_az_index.id]
+  availability_zone       = random_shuffle.az_list.result[count.index]
 
   tags = {
-    Name = "${local.name_prefix}_public_sn"
+    Name = "${local.name_prefix}_public_sn_${count.index}"
   }
 }
 
-resource "aws_subnet" "redstone_gateway_private_subnet" {
-  cidr_block              = local.private_subnet_cidr
+resource "aws_subnet" "redstone_gateway_private_subnets" {
+  count                   = local.private_subnet_count
+  cidr_block              = local.private_subnet_cidrs[count.index]
   vpc_id                  = aws_vpc.redstone_gateway_vpc.id
   map_public_ip_on_launch = false
-  availability_zone       = data.aws_availability_zones.availability_zones.names[random_integer.random_az_index.id]
+  availability_zone       = random_shuffle.az_list.result[count.index]
 
   tags = {
-    Name = "${local.name_prefix}_private_sn"
+    Name = "${local.name_prefix}_private_sn_${count.index}"
   }
+}
+
+
+//TODO: delete ?
+resource "aws_db_subnet_group" "redstone_gateway_db_sng" {
+  name       = "${local.name_prefix}_db_sng"
+  //TODO:
+  subnet_ids = aws_subnet.redstone_gateway_public_subnets.*.id
 }
 
 resource "aws_security_group" "redstone_gateway_security_groups" {
@@ -137,13 +150,14 @@ resource "aws_internet_gateway" "redstone_gateway_internet_gateway" {
   }
 }
 
-resource "aws_route" "redstone_gateway_public_default_route" {
+resource "aws_route" "redstone_gateway_public_internet_gateway_route" {
   route_table_id         = aws_route_table.redstone_gateway_public_rt.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.redstone_gateway_internet_gateway.id
 }
 
 resource "aws_route_table_association" "redstone_gateway_public_assoc" {
-  subnet_id      = aws_subnet.redstone_gateway_public_subnet.id
+  count          = local.public_subnet_count
+  subnet_id      = aws_subnet.redstone_gateway_public_subnets.*.id[count.index]
   route_table_id = aws_route_table.redstone_gateway_public_rt.id
 }

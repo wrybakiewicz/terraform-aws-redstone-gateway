@@ -24,3 +24,6 @@
 *.tfstate
 *.tfstate.*
 *.tfplan
+
+# .tfvars files
+*.tfvars
