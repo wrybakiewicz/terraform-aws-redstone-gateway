@@ -1,13 +1,18 @@
+locals {
+  container_id_key = "${local.provider_name}:${var.mongodbatlas_region}"
+  container_id = mongodbatlas_advanced_cluster.redstone_gateway_mongodbatlas_cluster.replication_specs[0].container_id[local.container_id_key]
+}
+
 data "mongodbatlas_network_container" "redstone_gateway_mongodbatlas_network_container" {
   project_id          = mongodbatlas_project.redstone_gateway_mongodbatlas_project.id
-  container_id        = mongodbatlas_advanced_cluster.redstone_gateway_mongodbatlas_cluster.replication_specs[0].container_id["AWS:EU_CENTRAL_1"]
+  container_id        = local.container_id
 }
 
 resource "mongodbatlas_network_peering" "redstone_gateway_mongodbatlas_network_peering" {
-  accepter_region_name   = "eu-central-1"
+  accepter_region_name   = data.aws_region.aws_current_region.name
   project_id             = mongodbatlas_project.redstone_gateway_mongodbatlas_project.id
-  container_id           = mongodbatlas_advanced_cluster.redstone_gateway_mongodbatlas_cluster.replication_specs[0].container_id["AWS:EU_CENTRAL_1"]
-  provider_name          = "AWS"
+  container_id           = local.container_id
+  provider_name          = local.provider_name
   route_table_cidr_block = local.vpc_cidr
   vpc_id                 = aws_vpc.redstone_gateway_vpc.id
   aws_account_id         = data.aws_caller_identity.aws_current_identity.account_id

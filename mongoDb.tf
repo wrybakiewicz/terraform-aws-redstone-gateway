@@ -1,3 +1,7 @@
+locals {
+  mongodb_username = "app"
+}
+
 data "aws_caller_identity" "aws_current_identity" {}
 
 data "mongodbatlas_roles_org_id" "redstone_gateway_mongodbatlas_roles_org_id" {
@@ -18,17 +22,22 @@ resource "mongodbatlas_advanced_cluster" "redstone_gateway_mongodbatlas_cluster"
         instance_size = "M10"
         node_count    = 3
       }
-      provider_name = "AWS"
+      provider_name = local.provider_name
       priority      = 7
-      //TODO: fetch ?
-      region_name   = "EU_CENTRAL_1"
+      region_name   = var.mongodbatlas_region
     }
   }
 }
 
+resource "random_password" "redstone_gateway_random_password" {
+  length           = 24
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
+}
+
 resource "mongodbatlas_database_user" "redstone_gateway_mongodbatlas_database_user" {
-  username           = "terraformUser"
-  password           = "test-acc-password"
+  username           = local.mongodb_username
+  password           = random_password.redstone_gateway_random_password.result
   project_id         = mongodbatlas_project.redstone_gateway_mongodbatlas_project.id
   auth_database_name = "admin"
 

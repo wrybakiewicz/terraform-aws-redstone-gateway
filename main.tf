@@ -1,3 +1,10 @@
+locals {
+  mongodb_connection_string = "${replace(mongodbatlas_advanced_cluster.redstone_gateway_mongodbatlas_cluster.connection_strings[0].standard_srv, "mongodb+srv://", "mongodb+srv://${mongodbatlas_database_user.redstone_gateway_mongodbatlas_database_user.username}:${coalesce(nonsensitive(mongodbatlas_database_user.redstone_gateway_mongodbatlas_database_user.password), "null")}@")}/redstoneGatewayDb"
+  ecr_image = "public.ecr.aws/y7v2w8b2/redstone-cache-service:f209220"
+}
+
+data "aws_region" "aws_current_region" {}
+
 resource "aws_ecs_cluster" "redstone_gateway_ecs_cluster" {
   name = "${local.name_prefix}_cluster"
 }
@@ -50,7 +57,7 @@ resource "aws_ecs_task_definition" "redstone_gateway_ecs_task_definition" {
   container_definitions = jsonencode([
     {
       name   = "${local.name_prefix}_container"
-      image  = "public.ecr.aws/y7v2w8b2/redstone-cache-service:f209220"
+      image  = local.ecr_image
       cpu    = 1024
       memory = 2048
       essential = true
@@ -62,16 +69,18 @@ resource "aws_ecs_task_definition" "redstone_gateway_ecs_task_definition" {
       ]
       environment = [
         {name: "ENABLE_STREAMR_LISTENING", value: "true"},
-        {name: "ENABLE_DIRECT_POSTING_ROUTES",   value: "false" },
-        {name: "API_KEY_FOR_ACCESS_TO_ADMIN_ROUTES",   value: var.admin_routes_api_key },
-        {name: "MONGO_DB_URL", value: "${replace(mongodbatlas_advanced_cluster.redstone_gateway_mongodbatlas_cluster.connection_strings[0].standard_srv, "mongodb+srv://", "mongodb+srv://${mongodbatlas_database_user.redstone_gateway_mongodbatlas_database_user.username}:${coalesce(nonsensitive(mongodbatlas_database_user.redstone_gateway_mongodbatlas_database_user.password), "null")}@")}/redstoneGatewayDb"}
+        {name: "ENABLE_DIRECT_POSTING_ROUTES",   value: "false" }
+      ]
+      secrets = [
+        {name: "MONGO_DB_URL", valueFrom: aws_ssm_parameter.ssm_param_connection_string.arn},
+        {name: "API_KEY_FOR_ACCESS_TO_ADMIN_ROUTES", valueFrom: aws_ssm_parameter.ssm_param_api_key_for_access_to_admin_routes.arn}
       ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-//          awslogs-create-group: "true"
+          awslogs-create-group: "true"
           awslogs-group  = "${local.name_prefix}_log_group"
-          awslogs-region = local.aws_region
+          awslogs-region = data.aws_region.aws_current_region.name
           awslogs-stream-prefix: "redstone"
         }
       }

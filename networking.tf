@@ -1,9 +1,7 @@
 locals {
   vpc_cidr = "10.2.0.0/16"
   public_subnet_cidrs     = [for i in range(2, 255, 2) : cidrsubnet(local.vpc_cidr, 8, i)]
-  private_subnet_cidrs    = [for i in range(1, 255, 2) : cidrsubnet(local.vpc_cidr, 8, i)]
   public_subnet_count = 2
-  private_subnet_count = 2
   max_subnets = 2
   security_groups = {
     public = {
@@ -84,26 +82,6 @@ resource "aws_subnet" "redstone_gateway_public_subnets" {
   }
 }
 
-resource "aws_subnet" "redstone_gateway_private_subnets" {
-  count                   = local.private_subnet_count
-  cidr_block              = local.private_subnet_cidrs[count.index]
-  vpc_id                  = aws_vpc.redstone_gateway_vpc.id
-  map_public_ip_on_launch = false
-  availability_zone       = random_shuffle.az_list.result[count.index]
-
-  tags = {
-    Name = "${local.name_prefix}_private_sn_${count.index}"
-  }
-}
-
-
-//TODO: delete ?
-resource "aws_db_subnet_group" "redstone_gateway_db_sng" {
-  name       = "${local.name_prefix}_db_sng"
-  //TODO:
-  subnet_ids = aws_subnet.redstone_gateway_public_subnets.*.id
-}
-
 resource "aws_security_group" "redstone_gateway_security_groups" {
   for_each    = local.security_groups
   name        = each.value.name
@@ -131,14 +109,6 @@ resource "aws_route_table" "redstone_gateway_public_rt" {
 
   tags = {
     Name = "${local.name_prefix}_public_rt"
-  }
-}
-
-resource "aws_default_route_table" "redstone_gateway_private_rt" {
-  default_route_table_id = aws_vpc.redstone_gateway_vpc.default_route_table_id
-
-  tags = {
-    Name = "${local.name_prefix}_private_rt"
   }
 }
 
