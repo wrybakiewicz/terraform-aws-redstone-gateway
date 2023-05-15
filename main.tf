@@ -1,5 +1,6 @@
 locals {
   ecr_image = "public.ecr.aws/y7v2w8b2/redstone-cache-service:f209220"
+  ecs_container_name = "${local.name_prefix}_container"
 }
 
 data "aws_region" "aws_current_region" {}
@@ -28,7 +29,7 @@ resource "aws_ecs_service" "redstone_gateway_ecs_service" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.redstone_gateway_loadbalancer_target_group.arn
-    container_name   = "${local.name_prefix}_container"
+    container_name   = local.ecs_container_name
     container_port   = local.app_port
   }
 
@@ -54,7 +55,7 @@ resource "aws_ecs_task_definition" "redstone_gateway_ecs_task_definition" {
   execution_role_arn = aws_iam_role.redstone_gateway_ecs_task_execution_role.arn
   container_definitions = jsonencode([
     {
-      name   = "${local.name_prefix}_container"
+      name   = local.ecs_container_name
       image  = local.ecr_image
       cpu    = 1024
       memory = 2048
