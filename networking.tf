@@ -1,6 +1,6 @@
 locals {
-  vpc_cidr = "10.2.0.0/16"
-  public_subnet_cidrs     = [for i in range(2, 255, 2) : cidrsubnet(local.vpc_cidr, 8, i)]
+  vpc_cidr            = "10.2.0.0/16"
+  public_subnet_cidrs = [for i in range(2, 255, 2) : cidrsubnet(local.vpc_cidr, 8, i)]
   public_subnet_count = 3
 }
 
@@ -26,7 +26,7 @@ resource "aws_vpc" "redstone_gateway_vpc" {
 }
 
 resource "aws_subnet" "redstone_gateway_public_subnets" {
-  count = local.public_subnet_count
+  count                   = local.public_subnet_count
   cidr_block              = local.public_subnet_cidrs[count.index]
   vpc_id                  = aws_vpc.redstone_gateway_vpc.id
   map_public_ip_on_launch = true
@@ -38,37 +38,37 @@ resource "aws_subnet" "redstone_gateway_public_subnets" {
 }
 
 resource "aws_security_group" "redstone_gateway_lb_security_group" {
-  name = "lb_sg"
+  name        = "lb_sg"
   description = "Security group for Load Balancer."
-  vpc_id = aws_vpc.redstone_gateway_vpc.id
+  vpc_id      = aws_vpc.redstone_gateway_vpc.id
   ingress {
-    from_port = local.app_port
-    to_port = local.app_port
-    protocol = "tcp"
+    from_port   = local.app_port
+    to_port     = local.app_port
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
-    from_port = local.app_port
-    to_port = local.app_port
-    protocol = "tcp"
+    from_port   = local.app_port
+    to_port     = local.app_port
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_security_group" "redstone_gateway_ecs_security_group" {
-  name = "ecs_sg"
+  name        = "ecs_sg"
   description = "Security group for ECS."
-  vpc_id = aws_vpc.redstone_gateway_vpc.id
+  vpc_id      = aws_vpc.redstone_gateway_vpc.id
   ingress {
-    from_port         = local.app_port
-    to_port           = local.app_port
-    protocol          = "tcp"
+    from_port       = local.app_port
+    to_port         = local.app_port
+    protocol        = "tcp"
     security_groups = [aws_security_group.redstone_gateway_lb_security_group.id]
   }
   egress {
-    from_port = 0
-    protocol = "-1"
-    to_port = 0
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
     cidr_blocks = ["0.0.0.0/0"]
   }
 }

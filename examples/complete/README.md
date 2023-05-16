@@ -21,3 +21,5 @@ $ terraform init
 $ terraform plan
 $ terraform apply
 ```
+
+After apply completion, wait few minutes for stack to start.

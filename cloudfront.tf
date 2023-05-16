@@ -10,8 +10,8 @@ resource "aws_cloudfront_distribution" "redstone_gateway_cloudfront_distribution
   comment = "Distribution for ALB targeted to ECS with Redstone Gateway"
 
   origin {
-    domain_name              = aws_lb.redstone_gateway_loadbalancer.dns_name
-    origin_id                = aws_lb.redstone_gateway_loadbalancer.dns_name
+    domain_name = aws_lb.redstone_gateway_loadbalancer.dns_name
+    origin_id   = aws_lb.redstone_gateway_loadbalancer.dns_name
 
     custom_origin_config {
       http_port              = local.app_port
@@ -21,7 +21,7 @@ resource "aws_cloudfront_distribution" "redstone_gateway_cloudfront_distribution
     }
   }
 
-  enabled             = true
+  enabled = true
 
   default_cache_behavior {
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]

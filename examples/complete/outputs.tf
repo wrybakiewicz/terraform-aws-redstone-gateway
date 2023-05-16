@@ -1,14 +1,5 @@
-output "app_url" {
-  value = module.gateway.app_url
-}
-
-output "mongodb_username" {
-  value = module.gateway.mongodb_username
-}
-
-output "mongodb_password" {
-  value     = module.gateway.mongodb_password
-  sensitive = true
+output "api_url" {
+  value = module.gateway.api_url
 }
 
 output "mongodb_connection_string" {
