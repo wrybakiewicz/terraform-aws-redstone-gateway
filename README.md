@@ -3,7 +3,7 @@
 Terraform module which deploys [Redstone Gateway](https://github.com/redstone-finance/redstone-oracles-monorepo/tree/main/packages/cache-service) with required resources and configuration.
 
 This module relies on 2 providers - AWS and MongoDb Atlas. 
-MongoDb Atlas provider must have `Organization Project Creator` permission.
+MongoDb Atlas API key must have `Organization Project Creator` permission.
 
 Used services:
 - ECS Fargate for deploying Docker container with application
