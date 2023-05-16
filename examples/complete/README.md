@@ -6,7 +6,7 @@ Example with complete configuration for module.
 
 To run this example you need to set environment variables:
 
-For MongoDb Atlas - API Key must have `Organization Project Creator` permission
+For MongoDb Atlas - API Key must have `Organization Project Creator` permission:
 - MONGODB_ATLAS_PUBLIC_KEY
 - MONGODB_ATLAS_PRIVATE_KEY
 
